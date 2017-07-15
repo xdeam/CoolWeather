@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -133,6 +134,7 @@ public class ChooseAreaFragment extends Fragment {
         titleText.setText(selectedCity.getCityName());
         backButton.setVisibility(View.VISIBLE);
         countyList=DataSupport.where("cityid=?",String.valueOf(selectedCity.getId())).find(County.class);
+        Log.d("countryList",""+countyList.size());
         if(countyList.size()>0){
             dataList.clear();
             for(County county :countyList){
