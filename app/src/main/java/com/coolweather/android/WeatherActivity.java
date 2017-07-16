@@ -1,5 +1,6 @@
 package com.coolweather.android;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
@@ -22,6 +23,7 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.coolweather.android.gson.Forecast;
 import com.coolweather.android.gson.Weather;
+import com.coolweather.android.service.AotoUpdateService;
 import com.coolweather.android.util.HttpUtil;
 import com.coolweather.android.util.Utilty;
 
@@ -90,7 +92,9 @@ public class WeatherActivity extends AppCompatActivity {
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                requestWeather(weatherId);
+                String refwId=refresh();
+                if (refwId!=null) requestWeather(refwId);
+                else requestWeather(weatherId);
                 Log.d("time", String.valueOf(new Date()));
             }
         });
@@ -151,6 +155,7 @@ public class WeatherActivity extends AppCompatActivity {
         String updateTime=weather.basic.update.updateTime.split(" ")[1];
         String degree=weather.now.temperature+"℃";
         String weatherInfo=weather.now.more.info;
+        Log.d("weatherInfo",weather.now.more.info);
         titleCity.setText(cityName);
         titleUpdateTime.setText(updateTime);
         degreeText.setText(degree);
@@ -180,6 +185,8 @@ public class WeatherActivity extends AppCompatActivity {
         carwashText.setText(carWash);
         sportText.setText(sport);
         weatherLayout.setVisibility(View.VISIBLE);
+        Intent intent = new Intent(this, AotoUpdateService.class);
+        startService(intent);
     }
     private void loadBingPic(){
         Log.i("loadBingPic","log");
@@ -206,5 +213,18 @@ public class WeatherActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+    String refresh(){
+        String weatherId;
+        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
+        String weatherString=prefs.getString("weather",null);
+        if (weatherString!=null){
+            Weather weather= Utilty.handleWeatherResponse(weatherString);
+            weatherId=weather.basic.weatherId;
+        }else {
+            weatherId=getIntent().getStringExtra("weather_id");
+            weatherLayout.setVisibility(View.INVISIBLE);
+        }
+        return weatherId;
     }
 }
