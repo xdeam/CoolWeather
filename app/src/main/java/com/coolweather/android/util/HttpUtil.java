@@ -1,4 +1,4 @@
-package com.coolweather.android.util;
+package snow.coolweather.android.util;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
