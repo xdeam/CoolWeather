@@ -1,4 +1,4 @@
-package snow.coolweather.android.gson;
+package com.coolweather.android.gson;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -19,5 +19,7 @@ public class Forecast {
     public class More{
         @SerializedName("txt_d")
         public String info;
+        @SerializedName("code_d")
+        public String code;
     }
 }

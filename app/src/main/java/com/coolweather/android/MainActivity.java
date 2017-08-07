@@ -1,4 +1,4 @@
-package snow.coolweather.android;
+package com.coolweather.android;
 
 import android.content.Intent;
 import android.content.SharedPreferences;

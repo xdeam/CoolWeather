@@ -23,7 +23,9 @@
         <service
             android:name=".service.AotoUpdateService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true">
+
+        </service>
     </application>
 
 </manifest>

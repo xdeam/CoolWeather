@@ -1,4 +1,4 @@
-package snow.coolweather.android.service;
+package com.coolweather.android.service;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -9,9 +9,9 @@ import android.os.IBinder;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 
-import snow.coolweather.android.gson.Weather;
-import snow.coolweather.android.util.HttpUtil;
-import snow.coolweather.android.util.Utilty;
+import com.coolweather.android.gson.Weather;
+import com.coolweather.android.util.HttpUtil;
+import com.coolweather.android.util.Utilty;
 
 import java.io.IOException;
 
@@ -45,7 +45,7 @@ public class AotoUpdateService extends Service {
         if (weatherSting!=null){
             final Weather weather= Utilty.handleWeatherResponse(weatherSting);
             final String weatherId=weather.basic.weatherId;
-            String weatherUrl="http://guolin.tech/api/weather?cityid="+weatherId+"&key=1341315f54bc4eaaa80b841ad4520db6";
+            String weatherUrl="http://guolin.tech/api/weather?cityid="+weatherId+"&key=bc0418b57b2d4918819d3974ac1285d9";
             HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {

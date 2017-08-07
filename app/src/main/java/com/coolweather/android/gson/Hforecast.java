@@ -12,11 +12,11 @@ public class Hforecast {
 
     class Cond{
        public String code;
-        public String txt
+        public String txt;
     }
-    public String date  //时间
-    public String hum//相对湿度（%）
-    public String pop//降水概率
-    public String pres//气压
-    public String tmp//温度
+    public String date;  //时间
+    public String hum;//相对湿度（%）
+    public String pop;//降水概率
+    public String pres;//气压
+    public String tmp;//温度
 }
