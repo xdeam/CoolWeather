@@ -9,8 +9,9 @@ import android.os.IBinder;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 
-import com.coolweather.android.gson.Weather;
+import com.coolweather.android.gson.mx.MWeatherInfo;
 import com.coolweather.android.util.HttpUtil;
+import com.coolweather.android.util.RequestInfo;
 import com.coolweather.android.util.Utilty;
 
 import java.io.IOException;
@@ -43,27 +44,14 @@ public class AotoUpdateService extends Service {
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
         String weatherSting=prefs.getString("weather",null);
         if (weatherSting!=null){
-            final Weather weather= Utilty.handleWeatherResponse(weatherSting);
-            final String weatherId=weather.basic.weatherId;
-            String weatherUrl="http://guolin.tech/api/weather?cityid="+weatherId+"&key=bc0418b57b2d4918819d3974ac1285d9";
-            HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    e.printStackTrace();
-                }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    String responseTest=response.body().string();
-                    Weather weather1=Utilty.handleWeatherResponse(responseTest);
-                    if (weather!=null&&"ok".equals(weather.status)){
-                    SharedPreferences.Editor editor=PreferenceManager
-                            .getDefaultSharedPreferences(AotoUpdateService.this).edit();
-                        editor.putString("weather",responseTest);
-                        editor.apply();
-                    }
-                }
-            });
+            final MWeatherInfo weather= Utilty.handleMZWeatherRespnse(weatherSting);
+            String weatherId=weather.valuesList.get(0).cityid+"";
+            if (RequestInfo.getInstance().getWeatherInfo(weatherId)!=null)
+            {     String responseTest=RequestInfo.getResponseText();
+            SharedPreferences.Editor editor=PreferenceManager
+                    .getDefaultSharedPreferences(AotoUpdateService.this).edit();
+            editor.putString("weather",responseTest);
+            editor.apply();}
         }
     }
     private void updateBingPic(){

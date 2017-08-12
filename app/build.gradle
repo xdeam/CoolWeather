@@ -33,4 +33,5 @@ dependencies {
     compile 'com.google.code.gson:gson:2.8.0'
     compile 'com.github.bumptech.glide:glide:4.0.0-RC1'
     testCompile 'junit:junit:4.12'
+    compile 'com.amap.api:location:latest.integration'
 }

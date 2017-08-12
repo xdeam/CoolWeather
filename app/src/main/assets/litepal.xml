@@ -19,7 +19,7 @@
 			For example:
     	<version value="1" />
     -->
-    <version value="1" />
+    <version value="2" />
 
     <!--
     	Define your models in the list with mapping tag, LitePal will
@@ -35,6 +35,7 @@
         <mapping class="com.coolweather.android.db.Province"/>
         <mapping class="com.coolweather.android.db.County"/>
         <mapping class="com.coolweather.android.db.City"/>
+        <mapping class="com.coolweather.android.db.WeatherStored"/>
     </list>
 
     <!--

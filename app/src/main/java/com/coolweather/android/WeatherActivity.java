@@ -21,14 +21,19 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.coolweather.android.gson.Forecast;
-import com.coolweather.android.gson.Weather;
+import com.coolweather.android.gson.mx.MWeatherInfo;
+import com.coolweather.android.gson.mx.RecentlyWeather;
+import com.coolweather.android.gson.mx.SingleCityWeather;
+import com.coolweather.android.gson.mx.Weather3HoursDetailsInfos;
 import com.coolweather.android.service.AotoUpdateService;
 import com.coolweather.android.util.HttpUtil;
+import com.coolweather.android.util.MyApplication;
+import com.coolweather.android.util.RequestInfo;
 import com.coolweather.android.util.Utilty;
 
 import java.io.IOException;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -53,6 +58,7 @@ public class WeatherActivity extends AppCompatActivity {
     public LinearLayout drawPL;
     public AqiView aqiView;
     public Toolbar toolbar;
+    public   String weatherValueTrans;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,25 +90,52 @@ public class WeatherActivity extends AppCompatActivity {
         aqiView=(AqiView) findViewById(R.id.aqidiy);
         toolbar=(Toolbar)findViewById(R.id.toobar);
 
-        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
-        String weatherString=prefs.getString("weather",null);
+      SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
+         /* String weatherString=prefs.getString("weather",null);*/
         final String weatherId;
-        if (weatherString!=null){
-            Weather weather= Utilty.handleWeatherResponse(weatherString);
-            weatherId=weather.basic.weatherId;
-            showWeatherInfo(weather);
-        }else {
-            weatherId=getIntent().getStringExtra("weather_id");
-            weatherLayout.setVisibility(View.INVISIBLE);
-            requestWeather(weatherId);
+         weatherValueTrans=getIntent().getStringExtra("weatherTrans");
+        if(weatherValueTrans!=null){
+            Toast.makeText(WeatherActivity.this,"加载成功",Toast.LENGTH_SHORT).show();
+            MWeatherInfo mWeatherInfo=Utilty.handleMZWeatherRespnse(weatherValueTrans);
+            SingleCityWeather singleCityWeather=mWeatherInfo.valuesList.get(0);
+            weatherId=singleCityWeather.cityid+"";
+          /*  weatherId=singleCityWeather.cityid+"";
+            SharedPreferences.Editor editor=PreferenceManager
+                    .getDefaultSharedPreferences(WeatherActivity.this)
+                    .edit();
+            editor.putString("weather",weatherTrans);
+            editor.apply();*/
+            Log.d("11", "showWeatherByWeatherTrans");
+            showWeatherInfo(singleCityWeather);
         }
+       /* else if (weatherString!=null){
+            Log.d("11", "By WeatherString");
+           Weather weather= Utilty.handleWeatherResponse(weatherString);
+           // weatherId=weather.basic.weatherId;
+            showWeatherInfo(weather);
+          //  toolbar.setTitle(weather.basic.cityName);
+        }*/else {
+            weatherId=getIntent().getStringExtra("weather_id");
+            Log.d("11", "either both fail ");
+            weatherLayout.setVisibility(View.INVISIBLE);
+            //requestWeather(weatherId);
+
+        }
+
+
+
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                String refwId=refresh();
-                if (refwId!=null) requestWeather(refwId);
-                else requestWeather(weatherId);
-                Log.d("time", String.valueOf(new Date()));
+                loadBingPic();
+              MWeatherInfo mWeatherInfo=RequestInfo.getInstance().getMXWeather(weatherId);
+                if (mWeatherInfo!=null)
+                {showWeatherInfo(mWeatherInfo.valuesList.get(0));
+                    Toast.makeText(MyApplication.getContext(),"更新成功:)",Toast.LENGTH_SHORT).show();}
+                else
+                    Toast.makeText(MyApplication.getContext(),"更新失败>..<",Toast.LENGTH_SHORT).show();
+                swipeRefreshLayout.setRefreshing(false);
+
             }
         });
         String bingPic=prefs.getString("bing_pic",null);
@@ -112,12 +145,15 @@ public class WeatherActivity extends AppCompatActivity {
             loadBingPic();
         }
         toolbar.setNavigationIcon(R.drawable.ic_bac);
+        setSupportActionBar(toolbar);
+
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
+
      /*   navButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -125,7 +161,7 @@ public class WeatherActivity extends AppCompatActivity {
             }
         });*/
     }
-    public void requestWeather(final String weatherId){
+   /* public void requestWeather(final String weatherId){
         String weatherUrl="http://guolin.tech/api/weather?cityid="+weatherId+"&key=bc0418b57b2d4918819d3974ac1285d9";
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
             @Override
@@ -153,7 +189,19 @@ public class WeatherActivity extends AppCompatActivity {
                                     .edit();
                             editor.putString("weather",responseText);
                             editor.apply();
-                            showWeatherInfo(weather);
+                            List<WeatherStored> list = DataSupport.where("weatherId=?",weatherId).find(WeatherStored.class);
+                            WeatherStored weatherStored=null;
+                           if (list.size()!=0)
+                           weatherStored=list.get(0);
+                           else
+                           weatherStored=new WeatherStored();
+                            weatherStored.setCountyName(weather.basic.cityName);
+                            weatherStored.setWeatherid(weatherId);
+                            weatherStored.setWeatherString(responseText);
+                            weatherStored.save();
+
+                            toolbar.setTitle(weather.basic.cityName);
+                           showWeatherInfo(weather);
                         }else {
                             Toast.makeText(WeatherActivity.this,"获取天气失败",Toast.LENGTH_SHORT).show();
                         }
@@ -163,23 +211,23 @@ public class WeatherActivity extends AppCompatActivity {
             }
         });
         loadBingPic();
-    }
-    public void showWeatherInfo(Weather weather){
-        String cityName=weather.basic.cityName;
-        String updateTime=weather.basic.update.updateTime.split(" ")[1];
-        String degree=weather.now.temperature+"°";
-        String weatherInfo=weather.now.more.info;
-        Log.d("weatherInfo",weather.now.more.info);
+    }*/
+    public void showWeatherInfo(SingleCityWeather weather){
+        toolbar.setTitle(weather.city);
+        String cityName=weather.city;
+        String updateTime=weather.realtime.time;//updateTime.split(" ")[1];
+        String degree=weather.realtime.temp+"°";
+        String weatherInfo=weather.realtime.weather;
+       // Log.d("weatherInfo",weather.now.more.info);
         //titleCity.setText(cityName);
-        toolbar.setTitle(cityName);
-        setSupportActionBar(toolbar);
+
 //        titleUpdateTime.setText(updateTime);
         degreeText.setText(degree);
         weatherInfoText.setText(weatherInfo);
         forecastLayout.removeAllViews();
 
 
-        for (Forecast forecast:weather.forecastList){
+        for (RecentlyWeather recentlyWeather :weather.recentlyWeatherList){
             View view= LayoutInflater.from(this).inflate(R.layout.forecast_item,
                     forecastLayout,false);
             TextView dateText=(TextView)view.findViewById(R.id.date_text);
@@ -187,34 +235,43 @@ public class WeatherActivity extends AppCompatActivity {
             TextView maxText=(TextView)view.findViewById(R.id.max_text);
             TextView minText=(TextView)view.findViewById(R.id.min_text);
             ImageView weatherImg=(ImageView)view.findViewById(R.id.weather_pic);
-            dateText.setText(forecast.date.substring(5));
-            infoText.setText(forecast.more.info);
+            dateText.setText(recentlyWeather.date.toString().substring(5));
+            infoText.setText(recentlyWeather.weather);
           //  maxText.setText(forecast.tempture.max);
-           minText.setText(forecast.tempture.min);
-         Log.e("errCODE",""+getImageResourceId("a"+forecast.more.code));
-            Log.d("CODE",forecast.more.code);
+            minText.setText(recentlyWeather.temp_day_c);
+           // Log.e("errCODE",""+getImageResourceId("a"+recentlyWeather.img));
+            Log.d("CODE",recentlyWeather.img);
 
-           int resId=getResources().getIdentifier("a"+forecast.more.code, "drawable", getPackageName());
+           int resId=getResources().getIdentifier("a"+recentlyWeather.img, "drawable", getPackageName());
             Log.d("resCODE",resId+"");
-            int real=R.drawable.a100;
-            Log.d("REalCODE",""+real);
+            //int real=R.drawable.a100;
+           // Log.d("REalCODE",""+real);
            weatherImg.setImageResource(resId);
 
             forecastLayout.addView(view);
         }
         drawPL.removeAllViews();
        TeptView teptView=new TeptView(WeatherActivity.this);
-        teptView.setWeather(weather);
+        List <Integer> maxTemplist=new ArrayList<>();
+        List <Integer> minTemplist=new ArrayList<>();
+        for (Weather3HoursDetailsInfos weather3HoursDetailsInfos:weather.weatherDetailsInfo.weather3HoursDetailsInfos)
+        {
+            maxTemplist.add(Integer.valueOf(weather3HoursDetailsInfos.highestTemperature));
+            minTemplist.add(Integer.valueOf(weather3HoursDetailsInfos.lowerestTemperature));
+        }
+
+        teptView.setMaxTempList(maxTemplist);
+        teptView.setMinTempList(minTemplist);
         drawPL.addView(teptView);
 
-        if (weather.aqi!=null){
-            aqiView.setText(weather.aqi.city.qlty+" "+weather.aqi.city.aqi);
-            aqiText.setText(weather.aqi.city.aqi);
-            pm25Text.setText(weather.aqi.city.pm25);
+        if (weather.pm25.aqi!=null){
+            aqiView.setText(weather.pm25.quality+" "+weather.pm25.aqi);
+            aqiText.setText(weather.pm25.aqi);
+            pm25Text.setText(weather.pm25.pm25);
         }
-        String comfort="舒适度"+weather.suggestion.comfort.info;
-        String carWash="洗车指数"+weather.suggestion.carWash.info;
-        String sport="运动建议"+weather.suggestion.sport.info;
+        String comfort="降雨指数 "+weather.indexes.get(1).content;
+        String carWash="心情指数 "+weather.indexes.get(4).content;
+        String sport="运动建议 "+weather.indexes.get(3).content;
         comfortText.setText(comfort);
         carwashText.setText(carWash);
         sportText.setText(sport);
@@ -248,19 +305,7 @@ public class WeatherActivity extends AppCompatActivity {
             }
         });
     }
-    String refresh(){
-        String weatherId;
-        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
-        String weatherString=prefs.getString("weather",null);
-        if (weatherString!=null){
-            Weather weather= Utilty.handleWeatherResponse(weatherString);
-            weatherId=weather.basic.weatherId;
-        }else {
-            weatherId=getIntent().getStringExtra("weather_id");
-            weatherLayout.setVisibility(View.INVISIBLE);
-        }
-        return weatherId;
-    }
+
     public int getImageResourceId(String name) {
         R.drawable drawables=new R.drawable();
         //默认的id
@@ -275,5 +320,22 @@ public class WeatherActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return resId;
+    }
+
+    @Override
+    protected void onStop() {
+        Log.d("tt", "onStop: ");
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.d("tt", "des: ");
+        SharedPreferences.Editor editor=PreferenceManager
+                .getDefaultSharedPreferences(WeatherActivity.this)
+                .edit();
+        editor.putString("weather",weatherValueTrans);
+        editor.apply();
+        super.onDestroy();
     }
 }

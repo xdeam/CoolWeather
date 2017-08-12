@@ -9,9 +9,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
-import com.coolweather.android.gson.Forecast;
-import com.coolweather.android.gson.Weather;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,9 +28,26 @@ public class TeptView extends View {
     private int ySpace=5;//温度文字与图标间的垂直间隔
     private int[] x=new int[7];//一共有多少个温度值
     private String [] weekDay=new String[5];//显示的星期信息
-    private Weather weather;
     private int centerTemp;
     private int centerHeight;
+    private List <Integer>minTempList;
+    private List <Integer>maxTempList;
+
+    public List getMinTempList() {
+        return minTempList;
+    }
+
+    public void setMinTempList(List minTempList) {
+        this.minTempList = minTempList;
+    }
+
+    public List getMaxTempList() {
+        return maxTempList;
+    }
+
+    public void setMaxTempList(List maxTempList) {
+        this.maxTempList = maxTempList;
+    }
 
     public TeptView(Context context) {
         super(context);
@@ -45,7 +59,6 @@ public class TeptView extends View {
         this.context=context;
         init();
     }
-    public void setWeather(Weather weather){this.weather=weather;}
     public void init(){//执行初始化操作
         //坐标点画笔的初始化
         pointPaint=new Paint();
@@ -77,38 +90,24 @@ public class TeptView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         int width=this.getWidth();  //获取控件的宽度
-        xSpace=width/x.length;      //计算两个点之间的x轴间距
-        for (int i=0;i<x.length;i++){
+        xSpace=2*width/(maxTempList.size()+minTempList.size());      //计算两个点之间的x轴间距
+        for (int i=0;i<(maxTempList.size()+minTempList.size())/2;i++){
             x[i]=40+i*xSpace;
         }
 
-        List minTempList=new ArrayList();
-        List maxTempList=new ArrayList();
+
         List dateList=new ArrayList();
 
-        if (weather!=null){
-       for (Forecast forecast:weather.forecastList){
 
-           maxTempList.add(Integer.parseInt(forecast.tempture.max));
-           minTempList.add(Integer.parseInt(forecast.tempture.min));
-         //  dateList.add(forecast.date.substring(5));
-       // int minTempMiddle=((int) Collections.max(minTempList)+ (int) Collections.min(minTempList))/2;
-        //int maxTempMiddle=((int) Collections.max(maxTempList)+ (int) Collections.min(maxTempList))/2;
-       }}else{
-            minTempList.add(21);
-            minTempList.add(27);
-            minTempList.add(21);
-            minTempList.add(28);
-            minTempList.add(21);
-            maxTempList.add(39);
-            maxTempList.add(33);
-            maxTempList.add(35);
-            maxTempList.add(32);
-            maxTempList.add(30);
-
-        }
+       if (maxTempList.size()!=0&&minTempList.size()!=0)
          centerTemp=((int) Collections.max(maxTempList)+ (int) Collections.min(minTempList))/2;
-         //centerTemp=((int) Collections.max(maxTempList)+ (int) Collections.min(maxTempList))/2;
+       else if (maxTempList.size()!=0){
+           centerTemp=((int) Collections.max(maxTempList)+ (int) Collections.min(maxTempList))/2;
+       }else if (minTempList.size()!=0){
+           centerTemp=((int) Collections.max(minTempList)+ (int) Collections.min(minTempList))/2;
+       }else {
+           return;
+       }
         Log.d("centerTemp",centerTemp+"");
          centerHeight=this.getHeight()/2;//获取控件的Y轴中线，中线
         Log.d("centerHeight", "onDraw: "+centerHeight);
@@ -119,6 +118,7 @@ public class TeptView extends View {
 
     }
       public void  drawPL(List list,Canvas canvas,boolean isTop){
+          Log.d("size",maxTempList.size()+"");
           for (int i=0;i<list.size();i++){
               int temp=(int)list.get(i);
               float point=(-(temp-centerTemp))*scale;//该点相对于中线的纵坐标
