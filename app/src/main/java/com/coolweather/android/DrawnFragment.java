@@ -71,12 +71,14 @@ public class DrawnFragment extends Fragment{
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                WeatherActivity weatherActivity=(WeatherActivity) getActivity();
+                weatherActivity.drawerLayout.closeDrawer(Gravity.LEFT);
                 WeatherStored weatherStored=list.get(position);
                MWeatherInfo mWeatherInfo= Utilty.handleMZWeatherRespnse(weatherStored.getWeatherString());
-               WeatherActivity weatherActivity=(WeatherActivity) getActivity();
+
                 weatherActivity.weatherValueTrans=weatherStored.getWeatherString();
                 weatherActivity.showWeatherInfo(mWeatherInfo.valuesList.get(0));
-                weatherActivity.drawerLayout.closeDrawer(Gravity.LEFT);
+
             }
 
         });

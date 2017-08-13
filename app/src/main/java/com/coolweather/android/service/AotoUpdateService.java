@@ -10,15 +10,8 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 
 import com.coolweather.android.gson.mx.MWeatherInfo;
-import com.coolweather.android.util.HttpUtil;
 import com.coolweather.android.util.RequestInfo;
 import com.coolweather.android.util.Utilty;
-
-import java.io.IOException;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Response;
 
 public class AotoUpdateService extends Service {
     @Override
@@ -30,7 +23,7 @@ public class AotoUpdateService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         updateWeather();
-        updateBingPic();
+      //  updateBingPic();
         AlarmManager manager=(AlarmManager)getSystemService(ALARM_SERVICE);
         int eightHour=8*60*60*1000;
         long triggerAtTime= SystemClock.elapsedRealtime()+eightHour;
@@ -54,7 +47,7 @@ public class AotoUpdateService extends Service {
             editor.apply();}
         }
     }
-    private void updateBingPic(){
+/*    private void updateBingPic(){
         String requestBingPic="http://guolin.tech/api/bing_pic";
         HttpUtil.sendOkHttpRequest(requestBingPic, new Callback() {
             @Override
@@ -71,6 +64,6 @@ public class AotoUpdateService extends Service {
                 editor.apply();
             }
         });
-    }
+    }*/
 
 }

@@ -2,6 +2,7 @@ package com.coolweather.android.search;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
@@ -19,6 +20,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.coolweather.android.MainActivity;
 import com.coolweather.android.R;
 
 
@@ -190,7 +192,9 @@ public class SearchView extends LinearLayout implements View.OnClickListener {
                 ivDelete.setVisibility(GONE);
                 break;
             case R.id.search_btn_back:
+                mContext.startActivity(new Intent( mContext, MainActivity.class));
                 ((Activity) mContext).finish();
+
                 break;
         }
     }

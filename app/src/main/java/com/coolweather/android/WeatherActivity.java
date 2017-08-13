@@ -90,7 +90,7 @@ public class WeatherActivity extends AppCompatActivity {
         aqiView=(AqiView) findViewById(R.id.aqidiy);
         toolbar=(Toolbar)findViewById(R.id.toobar);
 
-      SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
+    //  SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
          /* String weatherString=prefs.getString("weather",null);*/
         final String weatherId;
          weatherValueTrans=getIntent().getStringExtra("weatherTrans");
@@ -127,7 +127,7 @@ public class WeatherActivity extends AppCompatActivity {
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                loadBingPic();
+
               MWeatherInfo mWeatherInfo=RequestInfo.getInstance().getMXWeather(weatherId);
                 if (mWeatherInfo!=null)
                 {showWeatherInfo(mWeatherInfo.valuesList.get(0));
@@ -138,12 +138,12 @@ public class WeatherActivity extends AppCompatActivity {
 
             }
         });
-        String bingPic=prefs.getString("bing_pic",null);
-        if (bingPic!=null){
+     //   String bingPic=prefs.getString("bing_pic",null);
+    /*    if (bingPic!=null){
             Glide.with(this).load(bingPic).into(bingPicImg);
         }else {
             loadBingPic();
-        }
+        }*/
         toolbar.setNavigationIcon(R.drawable.ic_bac);
         setSupportActionBar(toolbar);
 
@@ -269,9 +269,9 @@ public class WeatherActivity extends AppCompatActivity {
             aqiText.setText(weather.pm25.aqi);
             pm25Text.setText(weather.pm25.pm25);
         }
-        String comfort="降雨指数 "+weather.indexes.get(1).content;
-        String carWash="心情指数 "+weather.indexes.get(4).content;
-        String sport="运动建议 "+weather.indexes.get(3).content;
+        String comfort="感冒指数 "+weather.indexes.get(1).content;
+        String carWash="洗车指数 "+weather.indexes.get(2).content;
+        String sport="运动建议 "+weather.indexes.get(5).content;
         comfortText.setText(comfort);
         carwashText.setText(carWash);
         sportText.setText(sport);

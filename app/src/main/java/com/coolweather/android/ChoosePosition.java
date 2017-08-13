@@ -260,7 +260,7 @@ public class ChoosePosition extends AppCompatActivity implements SearchViewListe
             //更新搜索数据
             resultAdapter.notifyDataSetChanged();
         }
-        Toast.makeText(this, "完成搜素", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "完成搜索", Toast.LENGTH_SHORT).show();
 
 
     }
