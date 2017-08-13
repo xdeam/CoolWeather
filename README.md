@@ -8,4 +8,4 @@
 * 使用了自定义View
 
 ## 效果图
-![](https://github.com/xdeam/CoolWeather/tree/master/images/ax.png)
+![](https://github.com/xdeam/CoolWeather/blob/master/images/ax.png)
