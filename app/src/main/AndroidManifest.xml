@@ -36,8 +36,10 @@
             android:name="com.amap.api.v2.apikey"
             android:value="3f13d2cadb211053282db1d5088cf791">
         </meta-data>
-        <activity android:name=".ChoosePosition"></activity>
-        <activity android:name=".MainActivity">
+
+        <activity android:name=".ChoosePosition" />
+        <activity android:name=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -47,8 +49,6 @@
         <activity
             android:name=".WeatherActivity"
             android:launchMode="singleTop" />
-
-
         <service android:name="com.amap.api.location.APSService">
         </service>
     </application>

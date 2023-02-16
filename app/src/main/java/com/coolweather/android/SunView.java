@@ -2,9 +2,10 @@ package com.coolweather.android;
 
 import android.content.Context;
 import android.graphics.Paint;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
+
+import androidx.annotation.Nullable;
 
 /**
  * Created by kwinter on 2017/8/7.

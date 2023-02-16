@@ -3,16 +3,16 @@ package com.coolweather.android;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.widget.TextView;
+
+import androidx.annotation.Nullable;
 
 /**
  * Created by kwinter on 2017/8/6.
  */
 
-public class AqiView extends TextView {
+public class AqiView extends androidx.appcompat.widget.AppCompatTextView {
     Paint mPaint;
     public AqiView(Context context) {
         super(context);

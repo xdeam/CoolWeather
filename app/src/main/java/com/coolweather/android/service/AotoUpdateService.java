@@ -28,7 +28,7 @@ public class AotoUpdateService extends Service {
         int eightHour=8*60*60*1000;
         long triggerAtTime= SystemClock.elapsedRealtime()+eightHour;
         Intent i=new Intent(this,AotoUpdateService.class);
-        PendingIntent pi=PendingIntent.getService(this,0,i,0);
+        PendingIntent pi=PendingIntent.getService(this,0,i,PendingIntent.FLAG_IMMUTABLE);
         manager.cancel(pi);
         manager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,triggerAtTime,pi);
         return super.onStartCommand(intent,flags,startId);

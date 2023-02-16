@@ -4,10 +4,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -16,25 +17,30 @@ import com.amap.api.location.AMapLocationListener;
 import com.coolweather.android.util.RequestInfo;
 
 public class MainActivity extends AppCompatActivity {
-    public AMapLocationClient mLocationClient=null;
+    public AMapLocationClient mLocationClient = null;
     //声明mLocationOption对象
     public AMapLocationClientOption mLocationOption = null;
     private AMapLocationListener mLocationListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-       SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
-        String weatherTrans=prefs.getString("weather",null);
-        if (weatherTrans!=null){
-            Intent intent=new Intent(this, WeatherActivity.class);
-           intent.putExtra("weatherTrans",weatherTrans);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String weatherTrans = prefs.getString("weather", null);
+        if (weatherTrans != null) {
+            Intent intent = new Intent(this, WeatherActivity.class);
+            intent.putExtra("weatherTrans", weatherTrans);
             startActivity(intent);
             finish();
-        }else {
-            initAMapLocationListener();
-            initLocation();
+        } else {
+            Intent intent = new Intent(this, WeatherActivity.class);
+            intent.putExtra("weather_id","101010100");
+            startActivity(intent);
+            finish();
+//            initAMapLocationListener();
+//            initLocation();
         }
 
     }
@@ -43,10 +49,11 @@ public class MainActivity extends AppCompatActivity {
      * 获取高德地图定位城市
      */
     private void initAMapLocationListener() {
-        mLocationListener=new AMapLocationListener() {
-            @Override public void onLocationChanged(AMapLocation amapLocation) {
-                if(amapLocation!=null){
-                    if(amapLocation.getErrorCode()==0) {
+        mLocationListener = new AMapLocationListener() {
+            @Override
+            public void onLocationChanged(AMapLocation amapLocation) {
+                if (amapLocation != null) {
+                    if (amapLocation.getErrorCode() == 0) {
                         //定位成功回调信息，设置相关消息
                         amapLocation.getLocationType();//获取当前定位结果来源，如网络定位结果，详见定位类型表
                         amapLocation.getLatitude();//获取纬度
@@ -56,25 +63,25 @@ public class MainActivity extends AppCompatActivity {
                         if (!TextUtils.isEmpty(city)) {
                             String cityName = city.replace("市", "");
                             Log.i("定位成功", "当前城市为" + cityName);
-                            Toast.makeText(MainActivity.this, "当前城市"+cityName, Toast.LENGTH_SHORT).show();
-                            int weatherId=RequestInfo.getInstance().getAreasIdByCityName(cityName);
-                            if (RequestInfo.getInstance().getWeatherInfo(weatherId+"")!=null){
-                                String weatherTrans= RequestInfo.getResponseText();
-                                Intent intent=new Intent(MainActivity.this,WeatherActivity.class);
-                                intent.putExtra("weatherTrans",weatherTrans);
+                            Toast.makeText(MainActivity.this, "当前城市" + cityName, Toast.LENGTH_SHORT).show();
+                            int weatherId = RequestInfo.getInstance().getAreasIdByCityName(cityName);
+                            if (RequestInfo.getInstance().getWeatherInfo(weatherId + "") != null) {
+                                String weatherTrans = RequestInfo.getResponseText();
+                                Intent intent = new Intent(MainActivity.this, WeatherActivity.class);
+                                intent.putExtra("weatherTrans", weatherTrans);
                                 startActivity(intent);
-                                finish();}
+                                finish();
+                            }
 
                         }
 
-                    }else {
+                    } else {
                         //显示错误信息ErrCode是错误码，errInfo是错误信息，详见错误码表。
-                        Log.e("aMapError", "ErrCode:" + amapLocation.getErrorCode()
-                                + ", errInfo:" + amapLocation.getErrorInfo());
-                        Log.e("定位失败","");
+                        Log.e("aMapError", "ErrCode:" + amapLocation.getErrorCode() + ", errInfo:" + amapLocation.getErrorInfo());
+                        Log.e("定位失败", "");
                         Toast.makeText(MainActivity.this, "定位失败〒_〒", Toast.LENGTH_SHORT).show();
 
-                        Intent intent=new Intent(MainActivity.this,ChoosePosition.class);
+                        Intent intent = new Intent(MainActivity.this, ChoosePosition.class);
                         startActivity(intent);
                         finish();
 
@@ -90,12 +97,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     /**
      * 初始化高德地图定位参数
      */
     private void initLocation() {
-        mLocationClient=new AMapLocationClient(getApplicationContext());
+        try {
+            mLocationClient = new AMapLocationClient(getApplicationContext());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         mLocationClient.setLocationListener(mLocationListener);
         //初始化定位参数
         mLocationOption = new AMapLocationClientOption();
@@ -122,16 +132,17 @@ public class MainActivity extends AppCompatActivity {
      * 点击返回键两次退出程序
      */
     private long exitTime = 0;
+
     @Override
     public void onBackPressed() {
 
-            if (System.currentTimeMillis() - exitTime > 2000) {
-                Toast.makeText(this, "再按一次退出", Toast.LENGTH_SHORT).show();
-                exitTime = System.currentTimeMillis();
-            }else{
-                finish();
-                System.exit(0);
-            }
+        if (System.currentTimeMillis() - exitTime > 2000) {
+            Toast.makeText(this, "再按一次退出", Toast.LENGTH_SHORT).show();
+            exitTime = System.currentTimeMillis();
+        } else {
+            finish();
+            System.exit(0);
         }
+    }
 
 }

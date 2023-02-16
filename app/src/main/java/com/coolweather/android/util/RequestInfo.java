@@ -35,6 +35,11 @@ public class RequestInfo implements Callback{
     private static String responseText;
     private static MWeatherInfo mWeatherInfo;
     private boolean isLocked=true;
+    private OnSuccess onSuccess;
+
+    public void setOnSuccess(OnSuccess onSuccess) {
+        this.onSuccess = onSuccess;
+    }
 
     public static String getResponseText() {
         return responseText;
@@ -98,8 +103,6 @@ public class RequestInfo implements Callback{
                     WeatherStored weatherStored=null;
                     if (list.size()!=0)
                         weatherStored=list.get(0);
-
-
                 }
                 else{
                    rweather=null;
@@ -201,9 +204,15 @@ public class RequestInfo implements Callback{
 
     @Override
     public void onResponse(Call call, Response response) throws IOException {
-
         responseText=response.body().string();
         mWeatherInfo=new Gson().fromJson(responseText, MWeatherInfo.class);
        isLocked=false;
+       if (onSuccess!=null){
+           onSuccess.dosomthing();
+       }
+
+    }
+    public interface  OnSuccess{
+        void dosomthing();
     }
 }
