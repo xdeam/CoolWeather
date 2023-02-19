@@ -3,7 +3,6 @@ package com.coolweather.android;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -19,6 +18,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
@@ -28,15 +29,13 @@ import com.coolweather.android.gson.mx.SingleCityWeather;
 import com.coolweather.android.gson.mx.Weather3HoursDetailsInfos;
 import com.coolweather.android.service.AotoUpdateService;
 import com.coolweather.android.util.HttpUtil;
-import com.coolweather.android.util.MyApplication;
 import com.coolweather.android.util.RequestInfo;
 import com.coolweather.android.util.Utilty;
-import com.coolweather.android.util.WeatherApi;
-import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -62,15 +61,16 @@ public class WeatherActivity extends AppCompatActivity {
     public AqiView aqiView;
     public Toolbar toolbar;
     public String weatherValueTrans;
+    private WeatherViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (Build.VERSION.SDK_INT >= 21) {
-            View decorView = getWindow().getDecorView();
-            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-            getWindow().setStatusBarColor(Color.TRANSPARENT);
-        }
+
+
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
         setContentView(R.layout.activity_weather);
         // navButton=(Button)findViewById(R.id.nav_button);
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -92,10 +92,42 @@ public class WeatherActivity extends AppCompatActivity {
         aqiView = (AqiView) findViewById(R.id.aqidiy);
         toolbar = (Toolbar) findViewById(R.id.toobar);
 
+        viewModel = ViewModelProviders.of(this).get(WeatherViewModel.class);
+
+        viewModel.getWeatherInfo();
+
+        viewModel.getWeatherInitialized().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean init) {
+                if (init){
+                   try {
+                       showWeatherInfo(Objects.requireNonNull(viewModel.getWeather().getValue()).valuesList.get(0));
+                       viewModel.getWeatherInitialized().removeObserver(this);
+                   }catch (NullPointerException nullPointerException) {
+                       throw new RuntimeException(nullPointerException);
+                   }
+                }
+
+            }
+        });
+
+        viewModel.getRefreshing().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean refresh) {
+                if (!refresh){
+                    showWeatherInfo(viewModel.getWeather().getValue().valuesList.get(0));
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+            }
+        });
+
+
         //  SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
         /* String weatherString=prefs.getString("weather",null);*/
-        final String weatherId;
+        String weatherId;
         weatherValueTrans = getIntent().getStringExtra("weatherTrans");
+        weatherId = getIntent().getStringExtra("weatherId");
+        viewModel.getCityId().postValue(weatherId);
         if (weatherValueTrans != null) {
             Toast.makeText(WeatherActivity.this, "加载成功", Toast.LENGTH_SHORT).show();
             MWeatherInfo mWeatherInfo = Utilty.handleMZWeatherRespnse(weatherValueTrans);
@@ -125,7 +157,7 @@ public class WeatherActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                    RequestInfo requestInfo= RequestInfo.getInstance();
-                   requestInfo.getWeatherInfo(weatherId);
+//                   requestInfo.getWeatherInfo(weatherId);
                    requestInfo.setOnSuccess(() -> {
                        MWeatherInfo mWeatherInfo= RequestInfo.getmWeatherInfo();
                        SingleCityWeather singleCityWeather = mWeatherInfo.valuesList.get(0);
@@ -137,53 +169,14 @@ public class WeatherActivity extends AppCompatActivity {
 
         }
 
-
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                WeatherApi weatherApi=new WeatherApi();
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        HttpUtil.sendOkHttpRequest(weatherApi.Url(null), new Callback() {
-                            @Override
-                            public void onFailure(Call call, IOException e) {
-                               runOnUiThread(new Runnable() {
-                                   @Override
-                                   public void run() {
-                                       e.printStackTrace();
-                                       Toast.makeText(MyApplication.getContext(),"更新失败>..<",Toast.LENGTH_SHORT).show();
-                                       swipeRefreshLayout.setRefreshing(false);
-                                   }
-                               });
-                            }
-
-                            @Override
-                            public void onResponse(Call call, Response response) throws IOException {
-                                String responseText = response.body().string();
-                                MWeatherInfo mWeatherInfo = new Gson().fromJson(responseText, MWeatherInfo.class);
-                               runOnUiThread(new Runnable() {
-                                   @Override
-                                   public void run() {
-                                       showWeatherInfo(mWeatherInfo.valuesList.get(0));
-                                       swipeRefreshLayout.setRefreshing(false);
-                                       Toast.makeText(MyApplication.getContext(), "更新成功:)", Toast.LENGTH_SHORT).show();
-                                   }
-                               });
-                            }
-                        });
-
-                    }
-                }.run();
+                viewModel.refreshWeather();
 
             }
         });
-        //   String bingPic=prefs.getString("bing_pic",null);
-    /*    if (bingPic!=null){
-            Glide.with(this).load(bingPic).into(bingPicImg);
-        }else {
-            loadBingPic();
-        }*/
+
         toolbar.setNavigationIcon(R.drawable.ic_bac);
         setSupportActionBar(toolbar);
 
@@ -275,7 +268,7 @@ public class WeatherActivity extends AppCompatActivity {
             TextView maxText = (TextView) view.findViewById(R.id.max_text);
             TextView minText = (TextView) view.findViewById(R.id.min_text);
             ImageView weatherImg = (ImageView) view.findViewById(R.id.weather_pic);
-            dateText.setText(recentlyWeather.date.toString().substring(5));
+            dateText.setText(recentlyWeather.date.substring(5));
             infoText.setText(recentlyWeather.weather);
             //  maxText.setText(forecast.tempture.max);
             minText.setText(recentlyWeather.temp_day_c);
@@ -361,6 +354,8 @@ public class WeatherActivity extends AppCompatActivity {
 //        }
 //        return resId;
 //    }
+
+
 
     @Override
     protected void onStop() {

@@ -21,7 +21,6 @@ import com.coolweather.android.db.City;
 import com.coolweather.android.db.County;
 import com.coolweather.android.db.Province;
 import com.coolweather.android.util.HttpUtil;
-import com.coolweather.android.util.RequestInfo;
 import com.coolweather.android.util.Utilty;
 
 import org.litepal.crud.DataSupport;
@@ -83,22 +82,6 @@ public class ChooseAreaFragment extends Fragment {
                     if (getActivity()instanceof MainActivity) {
                         Intent intent = new Intent(getActivity(), WeatherActivity.class);
                         intent.putExtra("weather_id", weatherId);
-                        String weatherTrans="";
-                       showProgressDialog();
-                        for (int i=0;i<6;i++) {
-                          weatherTrans = RequestInfo.requestWeather(weatherId);
-                            Log.d("11", "Tryying Getting InfoMation");
-                            if (weatherTrans!=null)break;
-                            try {
-                                Thread.sleep(3000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-
-                        }
-                        closeProgressDialog();
-                        if (weatherTrans!=null)
-                        {  intent.putExtra("weatherTrans",weatherTrans);}
                         startActivity(intent);
                         getActivity().finish();
                     }else  if (getActivity() instanceof WeatherActivity){
@@ -106,6 +89,19 @@ public class ChooseAreaFragment extends Fragment {
                         activity.drawerLayout.closeDrawers();
                         activity.swipeRefreshLayout.setRefreshing(true);
                        // activity.requestWeather(weatherId);
+                    }
+                }else {
+                    String weatherId=countyList.get(position).getWeatherId();
+                    if (getActivity()instanceof MainActivity) {
+                        Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                        intent.putExtra("weather_id", weatherId);
+                        startActivity(intent);
+                        getActivity().finish();
+                    }else  if (getActivity() instanceof WeatherActivity){
+                        WeatherActivity activity=(WeatherActivity)getActivity();
+                        activity.drawerLayout.closeDrawers();
+                        activity.swipeRefreshLayout.setRefreshing(true);
+                        // activity.requestWeather(weatherId);
                     }
                 }
 

@@ -1,6 +1,8 @@
 package com.coolweather.android;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,14 +21,23 @@ import com.coolweather.android.gson.mx.MWeatherInfo;
 import com.coolweather.android.search.SearchAdapter;
 import com.coolweather.android.search.SearchView;
 import com.coolweather.android.search.SearchView.SearchViewListener;
+import com.coolweather.android.util.FileUtils;
 import com.coolweather.android.util.RequestInfo;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.litepal.crud.DataSupport;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class ChoosePosition extends AppCompatActivity implements SearchViewListener{
+public class ChoosePosition extends AppCompatActivity implements SearchViewListener {
 
     /**
      * 搜索结果列表view
@@ -87,16 +98,17 @@ public class ChoosePosition extends AppCompatActivity implements SearchViewListe
      * @param hintSize 提示框显示个数
      */
     public static void setHintSize(int hintSize) {
-       ChoosePosition.hintSize = hintSize;
+        ChoosePosition.hintSize = hintSize;
     }
 
+    public Map<String, String> citys = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        if (Build.VERSION.SDK_INT>=21){
-            View decorView=getWindow().getDecorView();
+        if (Build.VERSION.SDK_INT >= 21) {
+            View decorView = getWindow().getDecorView();
             decorView.setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
             getWindow().setStatusBarColor(Color.parseColor("#006699"));
@@ -105,6 +117,18 @@ public class ChoosePosition extends AppCompatActivity implements SearchViewListe
         setContentView(R.layout.activity_choose_position);
         initData();
         initViews();
+        String str = FileUtils.INSTANCE.getJson("Meizu_city.json", this);
+        try {
+            JSONObject jsonObject = new JSONObject(str);
+            JSONArray jsonArray = jsonObject.getJSONArray("areas");
+            for (int i = 0; i < jsonArray.length(); i++) {
+                jsonObject = jsonArray.getJSONObject(i);
+                citys.put(jsonObject.getString("countyname"), jsonObject.getString("areaid"));
+            }
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     /**
@@ -122,28 +146,27 @@ public class ChoosePosition extends AppCompatActivity implements SearchViewListe
         lvResults.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-              //  Toast.makeText(ChoosePosition.this, "position:" +((Areas)adapterView.getItemAtPosition(position)).getAreaid(), Toast.LENGTH_SHORT).show();
+                //  Toast.makeText(ChoosePosition.this, "position:" +((Areas)adapterView.getItemAtPosition(position)).getAreaid(), Toast.LENGTH_SHORT).show();
 
-                int areaid=((Areas)adapterView.getItemAtPosition(position)).getAreaid();
-                MWeatherInfo mWeatherInfo= RequestInfo.getInstance().getMXWeather(areaid+"");
-                if (mWeatherInfo!=null)
-                {
-                    String weatherTrans=RequestInfo.getResponseText();
-                    List<WeatherStored> list = DataSupport.where("areaId=?",areaid+"").find(WeatherStored.class);
-                    WeatherStored weatherStored=null;
-                    if (list.size()!=0)
-                        weatherStored=list.get(0);
+                int areaid = ((Areas) adapterView.getItemAtPosition(position)).getAreaid();
+                MWeatherInfo mWeatherInfo = RequestInfo.getInstance().getMXWeather(areaid + "");
+                if (mWeatherInfo != null) {
+                    String weatherTrans = RequestInfo.getResponseText();
+                    List<WeatherStored> list = DataSupport.where("areaId=?", areaid + "").find(WeatherStored.class);
+                    WeatherStored weatherStored = null;
+                    if (list.size() != 0)
+                        weatherStored = list.get(0);
                     else
-                        weatherStored=new WeatherStored();
+                        weatherStored = new WeatherStored();
                     weatherStored.setCityName(((Areas) adapterView.getItemAtPosition(position)).getCountyname());
                     weatherStored.setAreaId(areaid);
                     weatherStored.setWeatherString(weatherTrans);
 
                     weatherStored.save();
-                Intent intent=new Intent(ChoosePosition.this,WeatherActivity.class);
-                intent.putExtra("weatherTrans",weatherTrans);
-                startActivity(intent);
-                finish();
+                    Intent intent = new Intent(ChoosePosition.this, WeatherActivity.class);
+                    intent.putExtra("weatherTrans", weatherTrans);
+                    startActivity(intent);
+                    finish();
                 }
 
             }
@@ -168,7 +191,7 @@ public class ChoosePosition extends AppCompatActivity implements SearchViewListe
      * 获取db 数据
      */
     private void getDbData() {
-        dbData= RequestInfo.getInstance().getAreasListByGSON();
+        dbData = RequestInfo.getInstance().getAreasListByGSON();
     }
 
     /**
@@ -179,8 +202,8 @@ public class ChoosePosition extends AppCompatActivity implements SearchViewListe
        /* for (int i = 1; i <= hintSize; i++) {
             hintData.add("热搜" + i + "：Android自定义View");
         }*/
-       hintData.add("北京");
-       hintData.add("天津");
+        hintData.add("北京");
+        hintData.add("天津");
         hintData.add("上海");
         hintData.add("广州");
         hintAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, hintData);
@@ -235,6 +258,7 @@ public class ChoosePosition extends AppCompatActivity implements SearchViewListe
 
     /**
      * 当搜索框 文本改变时 触发的回调 ,更新自动补全数据
+     *
      * @param text
      */
     @Override
@@ -263,8 +287,31 @@ public class ChoosePosition extends AppCompatActivity implements SearchViewListe
         }
         Toast.makeText(this, "完成搜索", Toast.LENGTH_SHORT).show();
 
+        Intent intent = new Intent(this, WeatherActivity.class);
+        intent.putExtra("weather_id", citys.get(text));
+        startActivity(intent);
+        finish();
+
 
     }
 
+    public static String getJson(String fileName, Context context) {
+        //将json数据变成字符串
+        StringBuilder stringBuilder = new StringBuilder();
+        try {
+            //获取assets资源管理器
+            AssetManager assetManager = context.getAssets();
+            //通过管理器打开文件并读取
+            BufferedReader bf = new BufferedReader(new InputStreamReader(
+                    assetManager.open(fileName)));
+            String line;
+            while ((line = bf.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return stringBuilder.toString();
+    }
 }
 
